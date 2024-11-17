@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Device Registration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome!</h1>
+        <p>Please enter your NetID to complete registration</p>
+        <input type="text" id="netID" placeholder="Enter your NetID" required>
+        <br>
+        <button onclick="submitRegistration()">Register Device</button>
+        <div id="status"></div>
+    </div>
+    <script src="{{ url_for('static', filename='js/fingerprint.js') }}"></script>
+</body>
+</html>
