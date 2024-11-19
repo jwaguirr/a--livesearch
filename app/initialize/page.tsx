@@ -41,6 +41,7 @@ const TeamRegistrationForm = () => {
     setError(null);
     
     try {
+      console.log(fingerprint)
       const response = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,7 +52,7 @@ const TeamRegistrationForm = () => {
           sections: teammates.map(teammate => teammate.section).filter(section => section !== ""),
           fingerPrint: fingerprint,
           idealRoute: ["A", "B", "C", "D", "E"],
-          progress: { "initial": new Date().toISOString() },
+          progress: [{"initial" : new Date().toISOString()}],
           goodProgress: []
         })
       });

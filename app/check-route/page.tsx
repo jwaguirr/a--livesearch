@@ -18,9 +18,9 @@ export default function CheckRoute() {
         const fp = await FingerprintJS.load();
         const result = await fp.get();
         const urlParams = new URLSearchParams(window.location.search);
-        const number = urlParams.get('num');
-        const letter = urlParams.get('qr');
-
+        const number = urlParams.get('number');
+        const letter = urlParams.get('node');
+        console.log(result.visitorId)
         const response = await fetch('/api/verify-route', {
           method: 'POST',
           headers: {

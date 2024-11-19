@@ -1,4 +1,3 @@
-// app/api/verify-route/route.ts
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
 
@@ -32,21 +31,35 @@ export async function POST(request: Request) {
     }
 
     const remainingRoutes = user.idealRoute.filter(
-        (      route: any) => !user.goodProgress.includes(route)
+        (route: any) => !user.goodProgress.includes(route)
     );
 
     if (remainingRoutes[0] !== letter) {
-      await client.close();
-      return NextResponse.json(
-        { error: `Invalid route. Expected ${remainingRoutes[0]}, got ${letter}` }, 
-        { status: 400 }
-      );
+        // Create an object with letter as the key and timestamp as the value
+        const progressEntry = { [letter]: new Date() };
+        
+        await db.collection('users').updateOne(
+            { fingerPrint: fingerprint },
+            { $push: { progress: progressEntry } }
+        );
+        await client.close();
+        return NextResponse.json(
+            { error: `Invalid route. Expected ${remainingRoutes[0]}, got ${letter}` }, 
+            { status: 400 }
+        );
     }
 
-    // Update progress
+    // Update both progress and goodProgress in a single operation
+    const progressEntry = { [letter]: new Date() };
+    
     await db.collection('users').updateOne(
-      { fingerPrint: fingerprint },
-      { $push: { goodProgress: letter } }
+        { fingerPrint: fingerprint },
+        { 
+            $push: { 
+                progress: progressEntry,
+                goodProgress: letter 
+            }
+        }
     );
 
     await client.close();

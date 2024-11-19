@@ -1,19 +1,25 @@
 # Only for generating qr code one time use
 import qrcode
 
-def generate_fingerprint_qr(base_url):
+def generate_fingerprint_qr(route: str, qr_name: str):
     # Create QR code instance
+    base_url = "http://10.244.245.129:3000"
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     
     # Add the URL data
-    qr.add_data(f"{base_url}/check-route?node=A&number=3")
+    qr.add_data(f"{base_url}/{route}")
     qr.make(fit=True)
     
     # Create an image from the QR Code
     qr_image = qr.make_image(fill_color="black", back_color="white")
     
     # Save it
-    qr_image.save("node1-qr.png")
+    qr_image.save(qr_name)
 
 # Usage example
-generate_fingerprint_qr("http://168.5.141.192:3000")
+generate_fingerprint_qr("/check-route?node=A&number=4", "node1-qr.png")
+generate_fingerprint_qr("/check-route?node=B&number=4", "node2-qr.png")
+generate_fingerprint_qr("/initialize", 'init.png')
+
+
+#http://10.244.245.129:3000/check-route?node=A&number=3
