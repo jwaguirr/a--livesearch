@@ -26,9 +26,6 @@ interface TeamSubmission {
   goodProgress: string[];
 }
 
-
-
-
 const TeamRegistrationForm = () => {
   const [teammates, setTeammates] = useState<TeamMember[]>([
     { netid: "", name: "", section: "" },
@@ -36,15 +33,14 @@ const TeamRegistrationForm = () => {
   ]);
   const [fingerprint, setFingerprint] = useState('');
   const [formData, setFormData] = useState({
-    user: { netid: "", fullName: "", section: "" },
+    user: { netid: "", name: "", section: "" },
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [groupColor, setGroupColor] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const sections = ["9:25am", "10:50am", "1pm", "2:30pm", "7pm"];
-
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function getFingerprint() {
@@ -55,39 +51,40 @@ const TeamRegistrationForm = () => {
     getFingerprint();
   }, []);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     
     try {
+      // Filter out empty teammate entries
+      const validTeammates = teammates.filter(t => t.netid && t.name && t.section);
+
       // Create array of all team members including the user
       const allTeamMembers: TeamMember[] = [
         {
           netid: formData.user.netid,
-          name: formData.user.fullName,
+          name: formData.user.name,
           section: formData.user.section
         },
-        ...teammates.map(teammate => ({
-          netid: teammate.netid,
-          name: teammate.name,
-          section: teammate.section
-        }))
+        ...validTeammates
       ];
+
+      const submission: TeamSubmission = {
+        netID: formData.user.netid,
+        section: formData.user.section,
+        fullName: formData.user.name,
+        groupMembers: allTeamMembers,
+        fingerPrint: fingerprint,
+        idealRoute: ["A", "B", "C", "D", "E"],
+        progress: [{ "initial": new Date().toISOString() }],
+        goodProgress: []
+      };
 
       const response = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          netID: formData.user.netid,
-          section: formData.user.section,
-          fullName: formData.user.fullName,
-          groupMembers: allTeamMembers,
-          fingerPrint: fingerprint,
-          idealRoute: ["A", "B", "C", "D", "E"],
-          progress: [{"initial": new Date().toISOString()}],
-          goodProgress: []
-        } as TeamSubmission)
+        body: JSON.stringify(submission)
       });
 
       const data = await response.json();
@@ -107,16 +104,37 @@ const TeamRegistrationForm = () => {
   const getRouteColor = (colorNumber: number | null): { name: string; hex: string } => {
     switch (colorNumber) {
       case 1:
-        return { name: 'Yellow', hex: '#FCD34D' }; // Tailwind yellow-400
+        return { name: 'Yellow', hex: '#FCD34D' };
       case 2:
-        return { name: 'Red', hex: '#EF4444' }; // Tailwind red-500
+        return { name: 'Red', hex: '#EF4444' };
       case 3:
-        return { name: 'Green', hex: '#10B981' }; // Tailwind green-500
+        return { name: 'Green', hex: '#10B981' };
       case 4:
-        return { name: 'Blue', hex: '#3B82F6' }; // Tailwind blue-500
+        return { name: 'Blue', hex: '#3B82F6' };
       default:
-        return { name: 'Unknown', hex: '#6B7280' }; // Tailwind gray-500
+        return { name: 'Unknown', hex: '#6B7280' };
     }
+  };
+
+  const handleUserInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      user: { ...prev.user, [field]: value }
+    }));
+  };
+
+  const handleTeammateChange = (index: number, field: string, value: string) => {
+    const newTeammates = [...teammates];
+    newTeammates[index] = { ...newTeammates[index], [field]: value };
+    setTeammates(newTeammates);
+  };
+
+  const addTeammate = () => {
+    setTeammates([...teammates, { netid: "", name: "", section: "" }]);
+  };
+
+  const removeTeammate = (index: number) => {
+    setTeammates(teammates.filter((_, i) => i !== index));
   };
 
   if (error) {
@@ -152,27 +170,6 @@ const TeamRegistrationForm = () => {
     );
   }
 
-  const handleUserInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      user: { ...prev.user, [field]: value }
-    }));
-  };
-
-  const handleTeammateChange = (index: number, field: string, value: string) => {
-    const newTeammates = [...teammates];
-    newTeammates[index] = { ...newTeammates[index], [field]: value };
-    setTeammates(newTeammates);
-  };
-
-  const addTeammate = () => {
-    setTeammates([...teammates, { netid: "", name: "", section: "" }]);
-  };
-
-  const removeTeammate = (index: number) => {
-    setTeammates(teammates.filter((_, i) => i !== index));
-  };
-
   if (isSubmitted) {
     const routeColor = getRouteColor(groupColor);
     
@@ -188,7 +185,7 @@ const TeamRegistrationForm = () => {
               <p className="font-semibold text-gray-600">Your Route Color:</p>
               <div 
                 className="flex items-center justify-center gap-2 p-3 rounded-lg"
-                style={{ backgroundColor: routeColor.hex + '20' }} // Adding transparency
+                style={{ backgroundColor: routeColor.hex + '20' }}
               >
                 <div 
                   className="w-6 h-6 rounded-full"
@@ -231,11 +228,11 @@ const TeamRegistrationForm = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="userFullName">Your Full Name</Label>
+                <Label htmlFor="userName">Your Full Name</Label>
                 <Input
-                  id="userFullName"
-                  value={formData.user.fullName}
-                  onChange={(e) => handleUserInputChange('fullName', e.target.value)}
+                  id="userName"
+                  value={formData.user.name}
+                  onChange={(e) => handleUserInputChange('name', e.target.value)}
                   placeholder="Enter your full name"
                   required
                 />
@@ -281,15 +278,15 @@ const TeamRegistrationForm = () => {
                   <Input
                     value={teammate.netid}
                     onChange={(e) => handleTeammateChange(index, 'netid', e.target.value)}
-                    placeholder={`Enter netid`}
+                    placeholder="Enter netid"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Input
                     value={teammate.name}
-                    onChange={(e) => handleTeammateChange(index, 'fullName', e.target.value)}
-                    placeholder={`Enter full name`}
+                    onChange={(e) => handleTeammateChange(index, 'name', e.target.value)}
+                    placeholder="Enter full name"
                     required
                   />
                 </div>
