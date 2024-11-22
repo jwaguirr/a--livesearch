@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const userData = {
       ...body,
       groupColorCounter: nextGroupColor,
-      timestamp: new Date()
+      initialTime: new Date()
     };
 
     const result = await db.collection('users').insertOne(userData);

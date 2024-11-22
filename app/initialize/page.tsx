@@ -48,11 +48,14 @@ const TeamRegistrationForm = () => {
         body: JSON.stringify({
           netID: formData.user.netid,
           section: formData.user.section,
-          groupMembers: teammates.map(teammate => teammate.netid).filter(netid => netid !== ""),
+          groupMembers: teammates.reduce((acc, teammate) => ({
+            ...acc,
+            [teammate.netid]: teammate.section
+          }), {}),          
           sections: teammates.map(teammate => teammate.section).filter(section => section !== ""),
           fingerPrint: fingerprint,
           idealRoute: ["A", "B", "C", "D", "E"],
-          progress: [{"initial" : new Date().toISOString()}],
+          progress: [],
           goodProgress: []
         })
       });
