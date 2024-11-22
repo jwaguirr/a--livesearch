@@ -9,14 +9,20 @@ import { Label } from "@/components/ui/label";
 import { Plus, Minus, Loader2, AlertTriangle } from 'lucide-react';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
+interface TeammateData {
+  netid: string;
+  fullName: string;
+  section: string;
+}
+
 const TeamRegistrationForm = () => {
-  const [teammates, setTeammates] = useState([
-    { netid: "", section: "" },
-    { netid: "", section: "" }
+  const [teammates, setTeammates] = useState<TeammateData[]>([
+    { netid: "", fullName: "", section: "" },
+    { netid: "", fullName: "", section: "" }
   ]);
   const [fingerprint, setFingerprint] = useState('');
   const [formData, setFormData] = useState({
-    user: { netid: "", section: "" },
+    user: { netid: "", fullName: "", section: "" },
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +47,19 @@ const TeamRegistrationForm = () => {
     setError(null);
     
     try {
-      console.log(fingerprint)
+      // Create groupMembers object with netID as key and name as value
+      const groupMembers = teammates.reduce((acc, teammate) => {
+        if (teammate.netid && teammate.fullName) {
+          acc[teammate.netid] = teammate.fullName;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+
+      // Add user's own data to groupMembers
+      if (formData.user.netid && formData.user.fullName) {
+        groupMembers[formData.user.netid] = formData.user.fullName;
+      }
+
       const response = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,6 +89,21 @@ const TeamRegistrationForm = () => {
       setError('Failed to submit form. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getRouteColor = (colorNumber: number | null): { name: string; hex: string } => {
+    switch (colorNumber) {
+      case 1:
+        return { name: 'Yellow', hex: '#FCD34D' }; // Tailwind yellow-400
+      case 2:
+        return { name: 'Red', hex: '#EF4444' }; // Tailwind red-500
+      case 3:
+        return { name: 'Green', hex: '#10B981' }; // Tailwind green-500
+      case 4:
+        return { name: 'Blue', hex: '#3B82F6' }; // Tailwind blue-500
+      default:
+        return { name: 'Unknown', hex: '#6B7280' }; // Tailwind gray-500
     }
   };
 
@@ -121,7 +154,7 @@ const TeamRegistrationForm = () => {
   };
 
   const addTeammate = () => {
-    setTeammates([...teammates, { netid: "", section: "" }]);
+    setTeammates([...teammates, { netid: "", fullName: "", section: "" }]);
   };
 
   const removeTeammate = (index: number) => {
@@ -129,6 +162,8 @@ const TeamRegistrationForm = () => {
   };
 
   if (isSubmitted) {
+    const routeColor = getRouteColor(groupColor);
+    
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-2xl font-bold text-center text-green-600">
@@ -137,8 +172,24 @@ const TeamRegistrationForm = () => {
         <CardContent className="space-y-6">
           <div className="text-center space-y-4">
             <p className="text-lg">Your team has been registered successfully.</p>
-            <p className="font-bold">Your Route Color Number: {groupColor}</p>
-            <p className="text-sm">Please remember this number as it represents your route color.</p>
+            <div className="space-y-2">
+              <p className="font-semibold text-gray-600">Your Route Color:</p>
+              <div 
+                className="flex items-center justify-center gap-2 p-3 rounded-lg"
+                style={{ backgroundColor: routeColor.hex + '20' }} // Adding transparency
+              >
+                <div 
+                  className="w-6 h-6 rounded-full"
+                  style={{ backgroundColor: routeColor.hex }}
+                />
+                <span className="font-bold" style={{ color: routeColor.hex }}>
+                  {routeColor.name}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Follow the {routeColor.name.toLowerCase()} markers to complete your route.
+              </p>
+            </div>
             <p>You can now begin the activity!</p>
             <p className="text-sm text-gray-600">You may safely close this page.</p>
           </div>
@@ -156,15 +207,27 @@ const TeamRegistrationForm = () => {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="userNetId">Your NetID</Label>
-              <Input
-                id="userNetId"
-                value={formData.user.netid}
-                onChange={(e) => handleUserInputChange('netid', e.target.value)}
-                placeholder="Enter your netid"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="userNetId">Your NetID</Label>
+                <Input
+                  id="userNetId"
+                  value={formData.user.netid}
+                  onChange={(e) => handleUserInputChange('netid', e.target.value)}
+                  placeholder="Enter your netid"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="userFullName">Your Full Name</Label>
+                <Input
+                  id="userFullName"
+                  value={formData.user.fullName}
+                  onChange={(e) => handleUserInputChange('fullName', e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="userSection">Your Section</Label>
@@ -201,13 +264,23 @@ const TeamRegistrationForm = () => {
                   <Minus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="space-y-2">
-                <Input
-                  value={teammate.netid}
-                  onChange={(e) => handleTeammateChange(index, 'netid', e.target.value)}
-                  placeholder={`Enter teammate ${index + 1}'s netid`}
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Input
+                    value={teammate.netid}
+                    onChange={(e) => handleTeammateChange(index, 'netid', e.target.value)}
+                    placeholder={`Enter teammate ${index + 1}'s netid`}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    value={teammate.fullName}
+                    onChange={(e) => handleTeammateChange(index, 'fullName', e.target.value)}
+                    placeholder={`Enter teammate ${index + 1}'s name`}
+                    required
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Section</Label>

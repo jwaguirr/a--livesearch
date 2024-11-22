@@ -53,16 +53,6 @@ function Sidebar({ isCollapsed, setIsCollapsed, className }: SidebarProps) {
       href: '/admin/dashboard/teams',
       icon: Users,
     },
-    {
-      name: 'Nodes Map',
-      href: '/admin/dashboard/map',
-      icon: Map,
-    },
-    {
-      name: 'Settings',
-      href: '/admin/dashboard/settings',
-      icon: Settings,
-    },
   ];
 
   return (
