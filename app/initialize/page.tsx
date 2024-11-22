@@ -9,16 +9,30 @@ import { Label } from "@/components/ui/label";
 import { Plus, Minus, Loader2, AlertTriangle } from 'lucide-react';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
-interface TeammateData {
+interface TeamMember {
   netid: string;
-  fullName: string;
+  name: string;
   section: string;
 }
 
+interface TeamSubmission {
+  netID: string;
+  section: string;
+  fullName: string;
+  groupMembers: TeamMember[];
+  fingerPrint: string;
+  idealRoute: string[];
+  progress: Array<Record<string, string>>;
+  goodProgress: string[];
+}
+
+
+
+
 const TeamRegistrationForm = () => {
-  const [teammates, setTeammates] = useState<TeammateData[]>([
-    { netid: "", fullName: "", section: "" },
-    { netid: "", fullName: "", section: "" }
+  const [teammates, setTeammates] = useState<TeamMember[]>([
+    { netid: "", name: "", section: "" },
+    { netid: "", name: "", section: "" }
   ]);
   const [fingerprint, setFingerprint] = useState('');
   const [formData, setFormData] = useState({
@@ -47,18 +61,19 @@ const TeamRegistrationForm = () => {
     setError(null);
     
     try {
-      // Create groupMembers object with netID as key and name as value
-      const groupMembers = teammates.reduce((acc, teammate) => {
-        if (teammate.netid && teammate.fullName) {
-          acc[teammate.netid] = teammate.fullName;
-        }
-        return acc;
-      }, {} as Record<string, string>);
-
-      // Add user's own data to groupMembers
-      if (formData.user.netid && formData.user.fullName) {
-        groupMembers[formData.user.netid] = formData.user.fullName;
-      }
+      // Create array of all team members including the user
+      const allTeamMembers: TeamMember[] = [
+        {
+          netid: formData.user.netid,
+          name: formData.user.fullName,
+          section: formData.user.section
+        },
+        ...teammates.map(teammate => ({
+          netid: teammate.netid,
+          name: teammate.name,
+          section: teammate.section
+        }))
+      ];
 
       const response = await fetch('/api/submit', {
         method: 'POST',
@@ -66,16 +81,13 @@ const TeamRegistrationForm = () => {
         body: JSON.stringify({
           netID: formData.user.netid,
           section: formData.user.section,
-          groupMembers: teammates.reduce((acc, teammate) => ({
-            ...acc,
-            [teammate.netid]: teammate.section
-          }), {}),          
-          sections: teammates.map(teammate => teammate.section).filter(section => section !== ""),
+          fullName: formData.user.fullName,
+          groupMembers: allTeamMembers,
           fingerPrint: fingerprint,
           idealRoute: ["A", "B", "C", "D", "E"],
-          progress: [],
+          progress: [{"initial": new Date().toISOString()}],
           goodProgress: []
-        })
+        } as TeamSubmission)
       });
 
       const data = await response.json();
@@ -154,7 +166,7 @@ const TeamRegistrationForm = () => {
   };
 
   const addTeammate = () => {
-    setTeammates([...teammates, { netid: "", fullName: "", section: "" }]);
+    setTeammates([...teammates, { netid: "", name: "", section: "" }]);
   };
 
   const removeTeammate = (index: number) => {
@@ -269,15 +281,15 @@ const TeamRegistrationForm = () => {
                   <Input
                     value={teammate.netid}
                     onChange={(e) => handleTeammateChange(index, 'netid', e.target.value)}
-                    placeholder={`Enter teammate ${index + 1}'s netid`}
+                    placeholder={`Enter netid`}
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Input
-                    value={teammate.fullName}
+                    value={teammate.name}
                     onChange={(e) => handleTeammateChange(index, 'fullName', e.target.value)}
-                    placeholder={`Enter teammate ${index + 1}'s name`}
+                    placeholder={`Enter full name`}
                     required
                   />
                 </div>
