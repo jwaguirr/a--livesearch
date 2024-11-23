@@ -145,7 +145,6 @@ export default function TeamsPage() {
             })();
             const lastNode = team.goodProgress[team.goodProgress.length - 1] || 'Starting';
             const allMembers = [
-              { netid: team.netID, name: team.fullName, section: team.section },
               ...team.groupMembers
             ];
 
@@ -287,7 +286,6 @@ function TeamCard({ team }: { team: TeamData }) {
   const isCompleted = team.goodProgress.length === team.idealRoute.length;
   const progress = Math.round((team.goodProgress.length / team.idealRoute.length) * 100);
   const allMembers = [
-    { netid: team.netID, name: team.fullName, section: team.section },
     ...team.groupMembers
   ];
   

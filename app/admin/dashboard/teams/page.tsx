@@ -118,17 +118,17 @@ export default function LeaderboardPage() {
         };
       case 1: // Second place
         return {
-          icon: <Medal className="h-6 w-6 text-gray-400" />,
-          bgColor: "bg-gray-50",
-          borderColor: "border-gray-200",
-          numberColor: "text-gray-600"
+          icon: <Medal className="h-6 w-6 text-blue-400" />,
+          bgColor: "bg-blue-50",
+          borderColor: "border-blue-200",
+          numberColor: "text-blue-600"
         };
       case 2: // Third place
         return {
-          icon: <Award className="h-6 w-6 text-amber-600" />,
-          bgColor: "bg-amber-50",
-          borderColor: "border-amber-200",
-          numberColor: "text-amber-700"
+          icon: <Award className="h-6 w-6 text-orange-600" />,
+          bgColor: "bg-orange-50",
+          borderColor: "border-orange-200",
+          numberColor: "text-orange-700"
         };
       default: // Other positions
         return {
