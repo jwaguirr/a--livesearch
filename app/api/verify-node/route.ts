@@ -17,15 +17,20 @@ export async function POST(request: Request) {
     const user = await db.collection('users').findOne({ fingerPrint: fingerprint });
     
     if (!user) {
-      await client.close();
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+        console.error("USER NOT FOUND", fingerprint);
+        await client.close();
+        return NextResponse.json({ 
+          error: 'User not found',
+          needsVerification: true 
+        }, { status: 404 });
+      }
 
     // Check if group number matches
     if (user.groupColorCounter !== parseInt(number)) {
+        console.error("WRONG GROUP NUMBER")
       await client.close();
       return NextResponse.json(
-        { error: `Invalid group. Expected ${user.groupColorCounter}, got ${number}` }, 
+        { error: `Invalid group. Expected ${user.groupColorCounter}, got ${number}`, groupCount : user.groupColorCounter }, 
         { status: 403 }
       );
     }

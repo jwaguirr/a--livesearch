@@ -41,7 +41,6 @@ export default function CheckRoute() {
         
         setRouteData(newRouteData);
         
-        // First verify if this is the correct node
         const nodeResponse = await fetch('/api/verify-node', {
           method: 'POST',
           headers: {
@@ -49,9 +48,19 @@ export default function CheckRoute() {
           },
           body: JSON.stringify(newRouteData)
         });
-
-        if (!nodeResponse.ok) {
-          // If node is incorrect, redirect to failure immediately
+        
+        const data = await nodeResponse.json();
+        
+        if (nodeResponse.status === 404 && data.needsVerification) {
+          // Redirect to user-not-found with all necessary parameters
+          router.push(`/user-not-found?number=${number}&node=${letter}&fingerprint=${result.visitorId}`);
+          return;
+        } else if (nodeResponse.status === 403) {
+          // Wrong group number
+          router.push(`/wrong-group?groupNum=${data.groupCount}&scannedGroup=${number}`);
+          return;
+        } else if (!nodeResponse.ok) {
+          // Wrong node or other errors
           router.push(`/failure?node=${letter}`);
           return;
         }
