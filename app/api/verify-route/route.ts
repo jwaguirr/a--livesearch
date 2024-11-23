@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const db = client.db('fingerprint_db');
     
     const user = await db.collection('users').findOne({ fingerPrint: fingerprint });
-    
+    console.debug(user)
     if (!user) {
       await client.close();
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
