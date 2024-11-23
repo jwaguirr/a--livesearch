@@ -4,10 +4,15 @@ import { NextResponse } from 'next/server';
 const uri = process.env.MONGODB_URI!;
 
 export async function POST(request: Request) {
-  const { fingerprint, number, letter } = await request.json();
+  const { fingerprint, number, letter, gCost } = await request.json();
 
-  if (!fingerprint || !number || !letter) {
+  if (!fingerprint || !number || !letter || gCost === undefined) {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+  }
+
+  // Validate g-cost
+  if (gCost !== 100) {
+    return NextResponse.json({ error: 'Invalid g-cost value' }, { status: 400 });
   }
 
   try {
@@ -31,39 +36,52 @@ export async function POST(request: Request) {
     }
 
     const remainingRoutes = user.idealRoute.filter(
-        (route: any) => !user.goodProgress.includes(route)
+      (route: string) => !user.goodProgress.includes(route)
     );
 
     if (remainingRoutes[0] !== letter) {
-        // Create an object with letter as the key and timestamp as the value
-        const progressEntry = { [letter]: new Date() };
-        
-        await db.collection('users').updateOne(
-            { fingerPrint: fingerprint },
-            { $push: { progress: progressEntry } }
-        );
-        await client.close();
-        return NextResponse.json(
-            { error: `Invalid route. Expected ${remainingRoutes[0]}, got ${letter}` }, 
-            { status: 400 }
-        );
+      // Create a progress entry with letter, timestamp, and g-cost
+      const progressEntry = {
+        node: letter,
+        timestamp: new Date(),
+        gCost: gCost
+      };
+      
+      await db.collection('users').updateOne(
+        { fingerPrint: fingerprint },
+        { $push: { progress: progressEntry } }
+      );
+      await client.close();
+      return NextResponse.json(
+        { error: `Invalid route. Expected ${remainingRoutes[0]}, got ${letter}` }, 
+        { status: 400 }
+      );
     }
 
-    // Update both progress and goodProgress in a single operation
-    const progressEntry = { [letter]: new Date() };
+    // Update both progress and goodProgress with the successful attempt
+    const progressEntry = {
+      node: letter,
+      timestamp: new Date(),
+      gCost: gCost,
+      isCorrect: true
+    };
     
     await db.collection('users').updateOne(
-        { fingerPrint: fingerprint },
-        { 
-            $push: { 
-                progress: progressEntry,
-                goodProgress: letter 
-            }
+      { fingerPrint: fingerprint },
+      { 
+        $push: { 
+          progress: progressEntry,
+          goodProgress: letter 
         }
+      }
     );
 
     await client.close();
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Route verified successfully',
+      nextNode: remainingRoutes[1] || null
+    });
 
   } catch (error) {
     console.error('Error:', error);

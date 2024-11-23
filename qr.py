@@ -3,7 +3,7 @@ import qrcode
 
 def generate_fingerprint_qr(route: str, qr_name: str):
     # Create QR code instance
-    base_url = "http://168.5.158.135:3000"
+    base_url = "http://10.244.245.103:3000"
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     
     # Add the URL data
@@ -17,10 +17,10 @@ def generate_fingerprint_qr(route: str, qr_name: str):
     qr_image.save(qr_name)
 
 
-generate_fingerprint_qr("/check-route?node=A&number=2", "node1-qr.png")
-generate_fingerprint_qr("/check-route?node=B&number=2", "node2-qr.png")
-generate_fingerprint_qr("/check-route?node=C&number=2", "node3-qr.png")
+generate_fingerprint_qr("/check-route?node=A&number=1", "node1-qr.png")
+generate_fingerprint_qr("/check-route?node=B&number=1", "node2-qr.png")
+generate_fingerprint_qr("/check-route?node=C&number=1", "node3-qr.png")
 generate_fingerprint_qr("/initialize", 'init.png')
 
-# http://168.5.158.135:3000/
+# http://10.244.245.103:3000/
 #http://168.5.158.135:3000/check-route?node=A&number=3

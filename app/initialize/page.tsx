@@ -62,11 +62,6 @@ const TeamRegistrationForm = () => {
 
       // Create array of all team members including the user
       const allTeamMembers: TeamMember[] = [
-        {
-          netid: formData.user.netid,
-          name: formData.user.name,
-          section: formData.user.section
-        },
         ...validTeammates
       ];
 
