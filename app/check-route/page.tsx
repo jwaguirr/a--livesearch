@@ -7,7 +7,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface RouteData {
   fingerprint: string;
@@ -33,17 +33,36 @@ export default function CheckRoute() {
         const number = urlParams.get('number');
         const letter = urlParams.get('node');
         
-        setRouteData({
+        const newRouteData = {
           fingerprint: result.visitorId,
           number,
           letter
+        };
+        
+        setRouteData(newRouteData);
+        
+        // First verify if this is the correct node
+        const nodeResponse = await fetch('/api/verify-node', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newRouteData)
         });
+
+        if (!nodeResponse.ok) {
+          // If node is incorrect, redirect to failure immediately
+          router.push(`/failure?node=${letter}`);
+          return;
+        }
+
+        // If node is correct, show g-cost input
         setShowGCostInput(true);
         setIsLoading(false);
+
       } catch (error) {
         console.error('Error:', error);
-        setError('Failed to initialize route verification');
-        setTimeout(() => router.push('/failure'), 2000);
+        router.push('/failure');
       }
     }
 
@@ -53,7 +72,6 @@ export default function CheckRoute() {
   const handleGCostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     const gCostValue = parseInt(gCost);
 
@@ -75,23 +93,18 @@ export default function CheckRoute() {
         })
       });
 
-      const data = await response.json();
-
       if (response.ok) {
         router.push('/success');
       } else {
-        // Both wrong g-cost and wrong route will now be recorded in the database
         router.push(`/failure?node=${routeData?.letter}`);
       }
     } catch (error) {
       console.error('Error:', error);
       router.push(`/failure?node=${routeData?.letter}`);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !showGCostInput) {
     return (
       <Card className="w-full max-w-md mx-auto mt-8">
         <CardHeader className="text-xl font-semibold text-center">

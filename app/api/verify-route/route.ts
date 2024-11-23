@@ -21,25 +21,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check if group number matches
-    if (user.groupColorCounter !== parseInt(number)) {
-      await client.close();
-      return NextResponse.json(
-        { error: `Invalid group. Expected ${user.groupColorCounter}, got ${number}` }, 
-        { status: 403 }
-      );
-    }
-
     const remainingRoutes = user.idealRoute.filter(
       (route: string) => !user.goodProgress.includes(route)
     );
 
-    // First, record the attempt regardless of g-cost correctness
+    // Record the attempt with g-cost
     const progressEntry = {
       node: letter,
       timestamp: new Date(),
       gCost: gCost,
-      isCorrect: gCost === 100 && remainingRoutes[0] === letter
+      isCorrect: gCost === 100
     };
     
     await db.collection('users').updateOne(
@@ -47,7 +38,7 @@ export async function POST(request: Request) {
       { $push: { progress: progressEntry } }
     );
 
-    // Check g-cost first
+    // Check g-cost
     if (gCost !== 100) {
       await client.close();
       return NextResponse.json({ 
@@ -56,19 +47,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Then check if it's the correct route
-    if (remainingRoutes[0] !== letter) {
-      await client.close();
-      return NextResponse.json(
-        { 
-          error: `Invalid route. Expected ${remainingRoutes[0]}, got ${letter}`,
-          recorded: true
-        }, 
-        { status: 400 }
-      );
-    }
-
-    // If both g-cost and route are correct, update goodProgress
+    // Update goodProgress since both node and g-cost are correct
     await db.collection('users').updateOne(
       { fingerPrint: fingerprint },
       { $push: { goodProgress: letter } }
