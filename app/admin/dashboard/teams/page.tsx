@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, Timer, Medal, Clock, Search, MapPin, AlertCircle, Activity } from "lucide-react";
+import { Users, Timer, Trophy, Award, Medal, Clock, Search, MapPin, AlertCircle, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface TeamMember {
@@ -107,6 +107,39 @@ export default function LeaderboardPage() {
   .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
   .slice(0, 10);
 
+  const getMedalInfo = (position: number) => {
+    switch (position) {
+      case 0: // First place
+        return {
+          icon: <Trophy className="h-6 w-6 text-yellow-500" />,
+          bgColor: "bg-yellow-50",
+          borderColor: "border-yellow-200",
+          numberColor: "text-yellow-600"
+        };
+      case 1: // Second place
+        return {
+          icon: <Medal className="h-6 w-6 text-gray-400" />,
+          bgColor: "bg-gray-50",
+          borderColor: "border-gray-200",
+          numberColor: "text-gray-600"
+        };
+      case 2: // Third place
+        return {
+          icon: <Award className="h-6 w-6 text-amber-600" />,
+          bgColor: "bg-amber-50",
+          borderColor: "border-amber-200",
+          numberColor: "text-amber-700"
+        };
+      default: // Other positions
+        return {
+          icon: null,
+          bgColor: "bg-gray-50",
+          borderColor: "border-gray-200",
+          numberColor: "text-gray-500"
+        };
+    }
+  };
+
   return (
     <div className="flex-1 p-8">
       <div className="mb-6">
@@ -119,7 +152,7 @@ export default function LeaderboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Medal className="h-5 w-5" />
+              <Trophy className="h-5 w-5" />
               Leaderboard
             </CardTitle>
           </CardHeader>
@@ -134,16 +167,29 @@ export default function LeaderboardPage() {
                     { netid: team.netID, name: team.fullName, section: team.section },
                     ...team.groupMembers
                   ];
+                  const medalInfo = getMedalInfo(index);
 
                   return (
-                    <div key={team._id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-500 w-8">
-                        {index + 1}
+                    <div 
+                      key={team._id} 
+                      className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all
+                        ${medalInfo.bgColor} ${medalInfo.borderColor}
+                        ${index < 3 ? 'transform hover:scale-102 shadow-sm' : 'hover:bg-gray-100'}`}
+                    >
+                      <div className={`flex items-center justify-center w-12 ${index < 3 ? 'relative' : ''}`}>
+                        {medalInfo.icon && (
+                          <div className="absolute -left-1">
+                            {medalInfo.icon}
+                          </div>
+                        )}
+                        <span className={`text-2xl font-bold ${medalInfo.numberColor} ${index < 3 ? 'ml-4' : ''}`}>
+                          {index + 1}
+                        </span>
                       </div>
                       <div className="flex-grow">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h3 className="font-semibold">Team {team.netID}</h3>
+                            <h3 className="font-semibold text-lg">Team {team.netID}</h3>
                             <div className="text-sm text-gray-500">
                               Led by {team.fullName}
                             </div>
@@ -151,14 +197,27 @@ export default function LeaderboardPage() {
                               Members: {allMembers.map(m => m.name).join(', ')}
                             </div>
                           </div>
-                          <Badge 
-                            variant={isCompleted ? "secondary" : "default"}
-                            className={isCompleted ? "bg-gray-100 text-gray-800" : "bg-green-100 text-green-800"}
-                          >
-                            {progress}% complete
-                          </Badge>
+                          <div className="flex flex-col items-end gap-2 w-full">
+                            <Badge 
+                              variant={isCompleted ? "secondary" : "default"}
+                              className={`
+                                ${isCompleted ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
+                                ${index < 3 ? 'scale-110' : ''}
+                              `}
+                            >
+                              {progress}% complete
+                            </Badge>
+                            {index < 3 && progress === 100 && (
+                              <Badge className="bg-yellow-100 text-yellow-800">
+                                Finished!
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <Progress value={progress} className="h-2" />
+                        <Progress 
+                          value={progress} 
+                          className={`h-2 ${index < 3 ? 'bg-gray-200' : ''}`}
+                        />
                         <div className="flex justify-between mt-2 text-sm text-gray-500">
                           <span>Current: Node {lastNode}</span>
                           <span>Team Section: {team.section}</span>
