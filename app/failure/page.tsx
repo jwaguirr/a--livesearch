@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { XCircle, Search } from "lucide-react";
+import { XCircle, User2Icon } from "lucide-react";
 import { motion } from "framer-motion";
 
 const FailureNode = () => {
@@ -37,17 +37,17 @@ const FailureNode = () => {
               className="space-y-4"
             >
               <h1 className="text-2xl font-bold text-red-700">
-                Wrong Location!
+                That's Not Right!
               </h1>
               
               <p className="text-gray-600">
-                This isn't the node you're looking for.
+                There's been a mistake somewhere.
               </p>
               
               <div className="bg-red-50 p-4 rounded-lg flex items-center gap-2">
-                <Search className="text-red-600" />
+                <User2Icon className="text-red-600" />
                 <p className="text-sm text-red-700">
-                  Keep searching! The correct node is somewhere else.
+                  Please go see a TA for further guidance and help.
                 </p>
               </div>
             </motion.div>
@@ -56,7 +56,7 @@ const FailureNode = () => {
               onClick={() => window.close()}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
-              Close Window & Continue Searching
+              Close Window & Talk to a TA
             </Button>
           </CardContent>
         </Card>

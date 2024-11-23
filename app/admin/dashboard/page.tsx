@@ -16,12 +16,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+interface TeamMember {
+  netid: string;
+  name: string;
+  section: string;
+}
+
 interface TeamData {
   _id: string;
   netID: string;
   section: string;
-  groupMembers: Record<string, any>;
-  sections: string[];
+  fullName: string;
+  groupMembers: TeamMember[];
   progress: Array<Record<string, Date>>;
   goodProgress: string[];
   idealRoute: string[];
@@ -66,15 +72,33 @@ export default function TeamsPage() {
     return teams.filter(team => {
       const isCompleted = team.goodProgress.length === team.idealRoute.length;
       const isStatusMatch = status === 'completed' ? isCompleted : !isCompleted;
-      const matchesSearch = 
-        team.netID.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        Object.values(team.groupMembers || {}).some(member => 
-          member && typeof member === 'string' && 
-          member.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      // Get all members including team leader
+      const allMembers = [
+        { netid: team.netID, name: team.fullName, section: team.section },
+        ...team.groupMembers
+      ];
+
+      // Search through team ID, names, and netIDs
+      const matchesSearch = searchTerm.toLowerCase().trim() === '' || 
+        allMembers.some(member => 
+          member.netid.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          member.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         
       return isStatusMatch && matchesSearch;
     });
+  };
+
+  // Function to get the route color name
+  const getRouteColor = (colorNumber: number): string => {
+    switch (colorNumber) {
+      case 1: return 'Yellow';
+      case 2: return 'Red';
+      case 3: return 'Green';
+      case 4: return 'Blue';
+      default: return 'Unknown';
+    }
   };
 
   const paginatedTeams = (teams: TeamData[]) => {
@@ -101,6 +125,7 @@ export default function TeamsPage() {
           <tr className="bg-gray-50">
             <th className="p-2 text-left border">Team ID</th>
             <th className="p-2 text-left border">Members & Sections</th>
+            <th className="p-2 text-left border">Route Color</th>
             <th className="p-2 text-left border">Progress</th>
             <th className="p-2 text-left border">Time Elapsed</th>
             <th className="p-2 text-left border">Current Node</th>
@@ -119,22 +144,17 @@ export default function TeamsPage() {
               return `${minutes}:${seconds.toString().padStart(2, '0')}`;
             })();
             const lastNode = team.goodProgress[team.goodProgress.length - 1] || 'Starting';
-            
-            // Format members with NetID, name, and section
-            const membersList = Object.entries(team.groupMembers)
-              .filter(([key]) => key !== 'sections')
-              .map(([netid, name], index) => ({
-                netid,
-                name: name as string,
-                section: team.sections[index] || team.section // Fallback to team section if individual section not specified
-              }));
-  
+            const allMembers = [
+              { netid: team.netID, name: team.fullName, section: team.section },
+              ...team.groupMembers
+            ];
+
             return (
               <tr key={team._id} className="border-t hover:bg-gray-50">
                 <td className="p-2 border w-24">{team.netID}</td>
                 <td className="p-2 border">
                   <div className="space-y-1.5">
-                    {membersList.map(member => (
+                    {allMembers.map(member => (
                       <div key={member.netid} className="flex items-center justify-between text-sm">
                         <div>
                           <span className="font-medium">{member.netid}</span>
@@ -146,6 +166,9 @@ export default function TeamsPage() {
                       </div>
                     ))}
                   </div>
+                </td>
+                <td className="p-2 border w-28 text-center">
+                  <Badge>{getRouteColor(team.groupColorCounter)}</Badge>
                 </td>
                 <td className="p-2 border w-40">
                   <div className="flex items-center gap-2">
@@ -263,6 +286,10 @@ export default function TeamsPage() {
 function TeamCard({ team }: { team: TeamData }) {
   const isCompleted = team.goodProgress.length === team.idealRoute.length;
   const progress = Math.round((team.goodProgress.length / team.idealRoute.length) * 100);
+  const allMembers = [
+    { netid: team.netID, name: team.fullName, section: team.section },
+    ...team.groupMembers
+  ];
   
   const elapsedTime = (() => {
     const start = new Date(team.initialTime).getTime();
@@ -273,8 +300,16 @@ function TeamCard({ team }: { team: TeamData }) {
   })();
 
   const lastNode = team.goodProgress[team.goodProgress.length - 1] || 'Starting';
-  const memberNetIDs = getMemberNetIDs(team.groupMembers);
-  const groupMembersCount = memberNetIDs.length;
+
+  const getRouteColor = (colorNumber: number): string => {
+    switch (colorNumber) {
+      case 1: return 'Yellow';
+      case 2: return 'Red';
+      case 3: return 'Green';
+      case 4: return 'Blue';
+      default: return 'Unknown';
+    }
+  };
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -285,7 +320,7 @@ function TeamCard({ team }: { team: TeamData }) {
               <h3 className="font-semibold">Team {team.netID}</h3>
               <div className="flex items-center text-sm text-gray-500">
                 <Users className="h-4 w-4 mr-1" />
-                {groupMembersCount} members
+                {allMembers.length} members
               </div>
               <div className="flex items-center text-sm text-gray-500">
                 <MapPin className="h-4 w-4 mr-1" />
@@ -294,10 +329,7 @@ function TeamCard({ team }: { team: TeamData }) {
             </div>
             <Badge 
               variant={isCompleted ? "secondary" : "default"}
-              className={
-                isCompleted ? "bg-gray-100 text-gray-800" :
-                "bg-green-100 text-green-800"
-              }
+              className={isCompleted ? "bg-gray-100 text-gray-800" : "bg-green-100 text-green-800"}
             >
               {isCompleted ? 'completed' : 'active'}
             </Badge>
@@ -329,7 +361,7 @@ function TeamCard({ team }: { team: TeamData }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem>
-                Route Color: {team.groupColorCounter}
+                Route Color: {getRouteColor(team.groupColorCounter)}
               </DropdownMenuItem>
               <DropdownMenuItem className="whitespace-normal">
                 Ideal Route: {team.idealRoute.join(' → ')}
@@ -338,7 +370,7 @@ function TeamCard({ team }: { team: TeamData }) {
                 Progress: {team.goodProgress.join(' → ')}
               </DropdownMenuItem>
               <DropdownMenuItem className="whitespace-normal">
-                Members: {memberNetIDs.join(', ')}
+                Members: {allMembers.map(m => `${m.netid} (${m.name})`).join(', ')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -7,12 +7,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Users, Timer, Medal, Clock, Search, MapPin, AlertCircle, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+interface TeamMember {
+  netid: string;
+  name: string;
+  section: string;
+}
+
 interface TeamData {
   _id: string;
   netID: string;
   section: string;
-  groupMembers: Record<string, any>;
-  sections: string[];
+  fullName: string;
+  groupMembers: TeamMember[];
   progress: Array<Record<string, Date>>;
   goodProgress: string[];
   idealRoute: string[];
@@ -30,12 +36,11 @@ const formatElapsedTime = (milliseconds: number): string => {
 const getLastActivityTime = (team: TeamData): number => {
   if (!team.progress.length) return new Date(team.initialTime).getTime();
   const lastProgress = team.progress[team.progress.length - 1];
-  // Get the timestamp from the last progress object by accessing the node key
   const lastNode = team.goodProgress[team.goodProgress.length - 1];
   return new Date(lastProgress[lastNode]).getTime();
 };
 
-export default function TeamsPage() {
+export default function LeaderboardPage() {
   const [teams, setTeams] = useState<TeamData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,15 +82,20 @@ export default function TeamsPage() {
 
   // Get recent activity (last 10 node completions)
   const recentActivity = teams.flatMap(team => {
-    // Get all progress entries with their timestamps and nodes
     const progressEntries = team.progress.map((progressObj, index) => {
-      // Get the node letter that was recorded in this progress entry
       const nodeLetter = Object.keys(progressObj)[0];
-      // Get the timestamp for this progress entry
       const timestamp = new Date(progressObj[nodeLetter]);
+      
+      // Get complete team info for display
+      const allMembers = [
+        { netid: team.netID, name: team.fullName, section: team.section },
+        ...team.groupMembers
+      ];
       
       return {
         teamId: team.netID,
+        teamLeader: team.fullName,
+        members: allMembers,
         timestamp,
         node: nodeLetter,
         progress: Math.round((team.goodProgress.length / team.idealRoute.length) * 100)
@@ -120,6 +130,10 @@ export default function TeamsPage() {
                   const progress = Math.round((team.goodProgress.length / team.idealRoute.length) * 100);
                   const isCompleted = team.goodProgress.length === team.idealRoute.length;
                   const lastNode = team.goodProgress[team.goodProgress.length - 1] || 'Starting';
+                  const allMembers = [
+                    { netid: team.netID, name: team.fullName, section: team.section },
+                    ...team.groupMembers
+                  ];
 
                   return (
                     <div key={team._id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
@@ -131,7 +145,10 @@ export default function TeamsPage() {
                           <div>
                             <h3 className="font-semibold">Team {team.netID}</h3>
                             <div className="text-sm text-gray-500">
-                              {Object.keys(team.groupMembers || {}).filter(key => key !== 'sections').join(', ')}
+                              Led by {team.fullName}
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              Members: {allMembers.map(m => m.name).join(', ')}
                             </div>
                           </div>
                           <Badge 
@@ -144,7 +161,7 @@ export default function TeamsPage() {
                         <Progress value={progress} className="h-2" />
                         <div className="flex justify-between mt-2 text-sm text-gray-500">
                           <span>Current: Node {lastNode}</span>
-                          <span>Section {team.section}</span>
+                          <span>Team Section: {team.section}</span>
                         </div>
                       </div>
                     </div>
@@ -175,6 +192,9 @@ export default function TeamsPage() {
                       <div className="font-medium">Team {activity.teamId}</div>
                       <div className="text-sm text-gray-500">
                         Reached Node {activity.node}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        Team Leader: {activity.teamLeader}
                       </div>
                       <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
                         <Clock className="h-3 w-3" />
