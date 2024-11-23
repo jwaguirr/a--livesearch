@@ -17,9 +17,9 @@ def generate_fingerprint_qr(route: str, qr_name: str):
     qr_image.save(qr_name)
 
 
-generate_fingerprint_qr("/check-route?node=A&number=2", "node1-qr.png")
-generate_fingerprint_qr("/check-route?node=B&number=2", "node2-qr.png")
-generate_fingerprint_qr("/check-route?node=C&number=2", "node3-qr.png")
+generate_fingerprint_qr("/check-route?node=A&number=4", "node1-qr.png")
+generate_fingerprint_qr("/check-route?node=B&number=4", "node2-qr.png")
+generate_fingerprint_qr("/check-route?node=C&number=4", "node3-qr.png")
 generate_fingerprint_qr("/initialize", 'init.png')
 
 # http://10.244.245.103:3000/

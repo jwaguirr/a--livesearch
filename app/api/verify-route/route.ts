@@ -25,12 +25,15 @@ export async function POST(request: Request) {
       (route: string) => !user.goodProgress.includes(route)
     );
 
+    // Formula is 6 total routes - amount remaining times 50
+    const correctGCost = (5 - remainingRoutes.length) * 50
+    console.error("Remaining routes!", remainingRoutes)
     // Record the attempt with g-cost
     const progressEntry = {
       node: letter,
       timestamp: new Date(),
       gCost: gCost,
-      isCorrect: gCost === 100
+      isCorrect: gCost === correctGCost
     };
     
     await db.collection('users').updateOne(
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
     );
 
     // Check g-cost
-    if (gCost !== 100) {
+    if (gCost !== correctGCost) {
       await client.close();
       return NextResponse.json({ 
         error: 'Incorrect g-cost value', 
