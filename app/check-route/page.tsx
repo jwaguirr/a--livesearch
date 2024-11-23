@@ -23,7 +23,6 @@ export default function CheckRoute() {
   const [showGCostInput, setShowGCostInput] = useState(false);
   const [gCost, setGCost] = useState('');
   const [routeData, setRouteData] = useState<RouteData | null>(null);
-  const [attempts, setAttempts] = useState(0);
 
   useEffect(() => {
     async function initializeRoute() {
@@ -58,16 +57,9 @@ export default function CheckRoute() {
 
     const gCostValue = parseInt(gCost);
 
-    if (isNaN(gCostValue) || gCostValue !== 100) {
-      setAttempts(prev => prev + 1);
+    if (isNaN(gCostValue)) {
+      setError('Please enter a valid number');
       setIsLoading(false);
-      setError('Incorrect g-cost value. Please try again.');
-      setGCost('');
-      
-      if (attempts >= 2) {
-        setTimeout(() => router.push('/failure'), 2000);
-        return;
-      }
       return;
     }
 
@@ -86,46 +78,18 @@ export default function CheckRoute() {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.nextNode) {
-          router.push('/success');
-        } else {
-          // Handle completion of all nodes
-          router.push('/complete');
-        }
+        router.push('/success');
       } else {
-        setError(data.error);
-        if (response.status === 400) {
-          setTimeout(() => router.push('/failure'), 2000);
-        }
+        // Both wrong g-cost and wrong route will now be recorded in the database
+        router.push(`/failure?node=${routeData?.letter}`);
       }
     } catch (error) {
       console.error('Error:', error);
-      setError('An unexpected error occurred');
-      setTimeout(() => router.push('/failure'), 2000);
+      router.push(`/failure?node=${routeData?.letter}`);
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (error) {
-    router.push(`/failure?node=${routeData?.letter}`);
-    // return (
-    //   <Card className="w-full max-w-md mx-auto mt-8">
-    //     <CardHeader className="text-xl font-semibold text-center text-red-600">
-    //       <div className="flex items-center justify-center gap-2">
-    //         <AlertTriangle className="h-6 w-6" />
-    //         Error
-    //       </div>
-    //     </CardHeader>
-    //     <CardContent className="text-center">
-    //       <p>{error}</p>
-    //       <p className="text-sm text-gray-600 mt-2">
-    //         {attempts >= 3 ? 'Maximum attempts reached. Redirecting...' : attempts > 0 ? `Attempts remaining: ${3 - attempts}` : ''}
-    //       </p>
-    //     </CardContent>
-    //   </Card>
-    // );
-  }
 
   if (isLoading) {
     return (

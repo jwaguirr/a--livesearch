@@ -10,11 +10,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
   }
 
-  // Validate g-cost
-  if (gCost !== 100) {
-    return NextResponse.json({ error: 'Invalid g-cost value' }, { status: 400 });
-  }
-
   try {
     const client = await MongoClient.connect(uri);
     const db = client.db('fingerprint_db');
@@ -39,41 +34,44 @@ export async function POST(request: Request) {
       (route: string) => !user.goodProgress.includes(route)
     );
 
-    if (remainingRoutes[0] !== letter) {
-      // Create a progress entry with letter, timestamp, and g-cost
-      const progressEntry = {
-        node: letter,
-        timestamp: new Date(),
-        gCost: gCost
-      };
-      
-      await db.collection('users').updateOne(
-        { fingerPrint: fingerprint },
-        { $push: { progress: progressEntry } }
-      );
-      await client.close();
-      return NextResponse.json(
-        { error: `Invalid route. Expected ${remainingRoutes[0]}, got ${letter}` }, 
-        { status: 400 }
-      );
-    }
-
-    // Update both progress and goodProgress with the successful attempt
+    // First, record the attempt regardless of g-cost correctness
     const progressEntry = {
       node: letter,
       timestamp: new Date(),
       gCost: gCost,
-      isCorrect: true
+      isCorrect: gCost === 100 && remainingRoutes[0] === letter
     };
     
     await db.collection('users').updateOne(
       { fingerPrint: fingerprint },
-      { 
-        $push: { 
-          progress: progressEntry,
-          goodProgress: letter 
-        }
-      }
+      { $push: { progress: progressEntry } }
+    );
+
+    // Check g-cost first
+    if (gCost !== 100) {
+      await client.close();
+      return NextResponse.json({ 
+        error: 'Incorrect g-cost value', 
+        recorded: true 
+      }, { status: 400 });
+    }
+
+    // Then check if it's the correct route
+    if (remainingRoutes[0] !== letter) {
+      await client.close();
+      return NextResponse.json(
+        { 
+          error: `Invalid route. Expected ${remainingRoutes[0]}, got ${letter}`,
+          recorded: true
+        }, 
+        { status: 400 }
+      );
+    }
+
+    // If both g-cost and route are correct, update goodProgress
+    await db.collection('users').updateOne(
+      { fingerPrint: fingerprint },
+      { $push: { goodProgress: letter } }
     );
 
     await client.close();
