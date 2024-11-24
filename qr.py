@@ -3,7 +3,7 @@ import qrcode
 
 def generate_fingerprint_qr(route: str, qr_name: str):
     # Create QR code instance
-    base_url = "http://192.168.1.223:3000"
+    base_url = "https://astar-livesearch.vercel.app"
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     
     # Add the URL data
