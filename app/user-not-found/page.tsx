@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, UserSearch } from 'lucide-react';
 
-export default function UserNotFound() {
+// Separate the content that uses useSearchParams
+function UserNotFoundContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [netId, setNetId] = useState('');
@@ -39,7 +41,6 @@ export default function UserNotFound() {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect back to check-route with original parameters
         router.push(`/check-route?number=${originalNumber}&node=${originalNode}`);
       } else {
         setError(data.error || 'Failed to verify NetID');
@@ -93,5 +94,20 @@ export default function UserNotFound() {
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+// Main component wrapped with Suspense
+export default function UserNotFound() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <UserNotFoundContent />
+    </Suspense>
   );
 }
