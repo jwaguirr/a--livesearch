@@ -8,11 +8,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from 'lucide-react';
+import CryptoJS, { enc } from 'crypto-js';
 
 interface RouteData {
   fingerprint: string;
   number: string | null;
   letter: string | null;
+}
+
+function decryptParams(encryptedData: string): { number: string | null; node: string | null } | null {
+  try {    
+    const key = CryptoJS.enc.Utf8.parse(process.env.NEXT_PUBLIC_ENCRYPTION_KEY!);
+    const standardBase64 = encryptedData.replace(/-/g, '+').replace(/_/g, '/');
+    const encryptedBytes = CryptoJS.enc.Base64.parse(standardBase64);
+    const iv = CryptoJS.enc.Utf8.parse(process.env.NEXT_PUBLIC_ENCRYPTION_IV!);
+    const actualData = CryptoJS.enc.Hex.parse(encryptedBytes.toString().slice(32));
+    const decrypted = CryptoJS.AES.decrypt(
+      {
+        ciphertext: actualData
+      },
+      key,
+      {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      }
+    );
+    const paramsString = decrypted.toString(CryptoJS.enc.Utf8).replace('AND', '&');    
+    
+    if (!paramsString) {
+      throw new Error('Decryption resulted in empty string');
+    }
+    const urlParams = new URLSearchParams(paramsString);
+    
+    return {
+      number: urlParams.get('number'),
+      node: urlParams.get('node')
+    };
+  } catch (error) {
+    console.error('Decryption error details:', error);
+    return null;
+  }
 }
 
 export default function CheckRoute() {
@@ -29,14 +65,24 @@ export default function CheckRoute() {
       try {
         const fp = await FingerprintJS.load();
         const result = await fp.get();
+        
+        // Get and decrypt the encrypted data from URL
         const urlParams = new URLSearchParams(window.location.search);
-        const number = urlParams.get('number');
-        const letter = urlParams.get('node');
+        const encryptedData = urlParams.get('data');
+        
+        if (!encryptedData) {
+          throw new Error('No encrypted data found');
+        }
+        
+        const decryptedParams = decryptParams(encryptedData);
+        if (!decryptedParams) {
+          throw new Error('Failed to decrypt parameters');
+        }
         
         const newRouteData = {
           fingerprint: result.visitorId,
-          number,
-          letter
+          number: decryptedParams.number,
+          letter: decryptedParams.node
         };
         
         setRouteData(newRouteData);
@@ -52,20 +98,16 @@ export default function CheckRoute() {
         const data = await nodeResponse.json();
         
         if (nodeResponse.status === 404 && data.needsVerification) {
-          // Redirect to user-not-found with all necessary parameters
-          router.push(`/user-not-found?number=${number}&node=${letter}&fingerprint=${result.visitorId}`);
+          router.push(`/user-not-found?number=${newRouteData.number}&node=${newRouteData.letter}&fingerprint=${result.visitorId}`);
           return;
         } else if (nodeResponse.status === 403) {
-          // Wrong group number
-          router.push(`/wrong-group?groupNum=${data.groupCount}&scannedGroup=${number}`);
+          router.push(`/wrong-group?groupNum=${data.groupCount}&scannedGroup=${newRouteData.number}`);
           return;
         } else if (!nodeResponse.ok) {
-          // Wrong node or other errors
-          router.push(`/failure?node=${letter}`);
+          router.push(`/failure?node=${newRouteData.letter}`);
           return;
         }
 
-        // If node is correct, show g-cost input
         setShowGCostInput(true);
         setIsLoading(false);
 
@@ -78,6 +120,7 @@ export default function CheckRoute() {
     initializeRoute();
   }, [router]);
 
+  // Rest of your component remains the same
   const handleGCostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
