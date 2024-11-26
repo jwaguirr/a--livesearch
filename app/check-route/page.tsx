@@ -107,7 +107,6 @@ export default function CheckRoute() {
           router.push(`/failure?node=${newRouteData.letter}`);
           return;
         }
-
         setShowGCostInput(true);
         setIsLoading(false);
 
@@ -145,9 +144,13 @@ export default function CheckRoute() {
         })
       });
 
-      if (response.ok) {
+      if (response.status === 200) {
         router.push('/success');
-      } else {
+      } 
+      else if (response.status === 202) {
+        router.push("/finish")
+      }
+      else {
         router.push(`/failure?node=${routeData?.letter}`);
       }
     } catch (error) {

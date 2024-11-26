@@ -25,7 +25,7 @@ def encrypt_params(params: str, key: bytes) -> str:
 
 def generate_fingerprint_qr(route: str, params: str, qr_name: str, encryption_key: bytes):
     """Generate QR code with encrypted parameters."""
-    base_url = "http://172.20.10.6:3000"
+    base_url = "http://192.168.1.223:3000"
     
     encrypted_params = encrypt_params(params, encryption_key) if params else ""
     

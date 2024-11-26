@@ -63,9 +63,6 @@ const CompletionPage = () => {
                 <Coffee className="h-6 w-6 text-yellow-600 mr-2" />
                 <h3 className="text-lg font-semibold text-yellow-800">Time for a Reward!</h3>
               </div>
-              <p className="text-gray-700">
-                Please help yourself to some donuts and refreshments.
-              </p>
             </div>
 
             <div className="mt-6 py-4">

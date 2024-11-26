@@ -56,12 +56,22 @@ export async function POST(request: Request) {
       { $push: { goodProgress: letter } }
     );
 
+    console.log(user)
+
+    if (user.goodProgress.length + 1 === 5) {
+      console.log("YES CHANGE SCREENS")
+      await client.close()
+      return NextResponse.json({
+        success: true,
+        message: "Found all the nodes!",
+      }, {status: 202})
+    }
     await client.close();
     return NextResponse.json({ 
       success: true,
       message: 'Route verified successfully',
       nextNode: remainingRoutes[1] || null
-    });
+    }, {status: 200});
 
   } catch (error) {
     console.error('Error:', error);

@@ -51,7 +51,9 @@ const FailureNode = () => {
                 </p>
               </div>
             </motion.div>
-
+            <p className='text-sm text-gray-500'>
+              Or navigate to <a target="_blank" href="help" className='underline'>here</a> for group information.
+            </p>
             <Button 
               onClick={() => window.close()}
               className="w-full bg-red-600 hover:bg-red-700 text-white"

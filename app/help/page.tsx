@@ -91,18 +91,18 @@ export default function HelpPage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader className="text-2xl font-bold">
+        <CardHeader className="text-2xl font-bold text-center">
           Your Progress
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Progress Overview */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Progress: {userProgress.currentProgress}%</span>
               <span>{userProgress.completedRoutes} of {userProgress.totalRoutes} routes completed</span>
             </div>
             <Progress value={Number(userProgress.currentProgress)} />
-          </div>
+          </div> */}
 
           {/* Group Info */}
           <div className="space-y-2">
@@ -117,22 +117,6 @@ export default function HelpPage() {
                 <p style={{backgroundColor: userProgress?.groupColor.hex}} className={`text-lg font-medium p-2 rounded-lg  text-center`}>{userProgress.groupColor.name}</p>
               </div>
             </div>
-          </div>
-
-          {/* Remaining Routes */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Remaining Routes</h3>
-            {userProgress.remainingRoutes.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {userProgress.remainingRoutes.map((route, index) => (
-                  <div key={index} className="bg-secondary p-2 rounded-md text-center">
-                    Node {route}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-green-600">All routes completed! 🎉</p>
-            )}
           </div>
 
           {/* Recent Attempts */}

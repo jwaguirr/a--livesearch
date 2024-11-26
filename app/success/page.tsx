@@ -53,7 +53,9 @@ const SuccessNode = () => {
                 </p>
               </div>
             </motion.div>
-
+            <p className='text-sm text-gray-500'>
+              Or navigate to <a target="_blank" href="help" className='underline'>here</a> for group information.
+            </p>
             <Button 
               onClick={() => window.close()}
               className="w-full bg-green-600 hover:bg-green-700 text-white"
