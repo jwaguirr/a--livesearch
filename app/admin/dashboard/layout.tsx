@@ -1,7 +1,7 @@
 // app/admin/dashboard/layout.tsx
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,19 +15,32 @@ import {
   Menu,
 } from "lucide-react";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { UserButton, useUser, useAuth, ClerkProvider } from '@clerk/nextjs';
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/admin/sign-in');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -39,7 +52,20 @@ export default function DashboardLayout({
   );
 }
 
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ClerkProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </ClerkProvider>
+  );
+}
+
 function Sidebar({ isCollapsed, setIsCollapsed, className }: SidebarProps) {
+  const { user } = useUser();
   const pathname = usePathname();
 
   const navigation = [
@@ -96,19 +122,9 @@ function Sidebar({ isCollapsed, setIsCollapsed, className }: SidebarProps) {
           ))}
         </div>
       </ScrollArea>
-      <div className="border-t border-blue-800 p-2">
-        <Button
-          variant="ghost"
-          size={isCollapsed ? "icon" : "default"}
-          className={cn(
-            "w-full justify-start gap-3 text-white hover:bg-blue-800",
-            isCollapsed && "justify-center"
-          )}
-          onClick={() => console.log('logout')}
-        >
-          <LogOut className="h-5 w-5" />
-          {!isCollapsed && <span>Logout</span>}
-        </Button>
+      <div className="flex items-center space-x-3 border-t border-blue-800 p-2 pl-4">
+        <UserButton afterSignOutUrl="/admin/sign-in" />
+        <p>{user?.emailAddresses[0].emailAddress}</p>
       </div>
     </div>
   );
