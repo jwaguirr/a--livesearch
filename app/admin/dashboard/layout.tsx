@@ -124,7 +124,7 @@ function Sidebar({ isCollapsed, setIsCollapsed, className }: SidebarProps) {
       </ScrollArea>
       <div className="flex items-center space-x-3 border-t border-blue-800 p-2 pl-4">
         <UserButton afterSignOutUrl="/admin/sign-in" />
-        <p>{user?.emailAddresses[0].emailAddress}</p>
+        {!isCollapsed && <p>{user?.emailAddresses[0].emailAddress}</p>}
       </div>
     </div>
   );
