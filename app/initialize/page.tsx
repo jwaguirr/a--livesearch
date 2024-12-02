@@ -207,7 +207,7 @@ const TeamRegistrationForm = () => {
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-2xl font-bold text-center">Team Registration</CardHeader>
+      <CardHeader className="text-2xl font-bold text-center">A* Treasure Hunt Team Registration</CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           <div className="space-y-4">
@@ -262,9 +262,10 @@ const TeamRegistrationForm = () => {
                   type="button" 
                   variant="ghost" 
                   size="sm"
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700 flex items-center"
                   onClick={() => removeTeammate(index)}
                 >
+                  <p>Remove Teammate</p>
                   <Minus className="h-4 w-4" />
                 </Button>
               </div>
@@ -327,7 +328,7 @@ const TeamRegistrationForm = () => {
                 Submitting...
               </>
             ) : (
-              'Submit Team'
+              'Register Team'
             )}
           </Button>
         </CardFooter>
