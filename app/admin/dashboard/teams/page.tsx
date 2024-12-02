@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, act } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Users, Timer, Trophy, Award, Medal, Clock, Search, MapPin, AlertCircle, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { timeStamp } from 'console';
 
 interface TeamMember {
   netid: string;
@@ -83,30 +84,32 @@ export default function LeaderboardPage() {
   // Get recent activity (last 10 node completions)
   const recentActivity = teams.flatMap(team => {
     const progressEntries = team.progress.map((progressObj, index) => {
-      const nodeLetter = Object.keys(progressObj)[0];
-      const timestamp = new Date(progressObj[nodeLetter]);
-      
-      // Get complete team info for display
-      const allMembers = [
-        { netid: team.netID, name: team.fullName, section: team.section },
-        ...team.groupMembers
-      ];
-      
-      return {
-        teamId: team.netID,
-        teamLeader: team.fullName,
-        members: allMembers,
-        timestamp,
-        node: nodeLetter,
-        progress: Math.round((team.goodProgress.length / team.idealRoute.length) * 100)
-      };
+        console.log("Progressobj", progressObj)
+        const nodeLetter = progressObj.node;
+        const timestamp = new Date(progressObj.timestamp);
+        console.log("Progress node", nodeLetter, timestamp)
+        // Get complete team info for display
+        const allMembers = [
+          { netid: team.netID, name: team.fullName, section: team.section },
+          ...team.groupMembers
+        ];
+        
+        return {
+          teamId: team.netID,
+          teamLeader: team.fullName,
+          members: allMembers,
+          timestamp,
+          node: nodeLetter,
+          progress: Math.round((team.goodProgress.length / team.idealRoute.length) * 100)
+        };
     });
 
     return progressEntries;
   })
   .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-  .slice(0, 10);
-
+  .slice(0, 10)
+  .filter((progress, index) => progress.node)
+  
   const getMedalInfo = (position: number) => {
     switch (position) {
       case 0: // First place
@@ -242,7 +245,9 @@ export default function LeaderboardPage() {
           <CardContent>
             <ScrollArea className="h-[calc(100vh-250px)]">
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
+                {recentActivity.map((activity, index) => {
+                  console.log(activity.node)
+                  return (
                   <div key={index} className="flex items-start gap-3 pb-4 border-b last:border-0">
                     <div className="mt-1">
                       <div className="w-2 h-2 rounded-full bg-blue-500" />
@@ -268,7 +273,7 @@ export default function LeaderboardPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             </ScrollArea>
           </CardContent>

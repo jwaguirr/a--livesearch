@@ -25,8 +25,8 @@ def encrypt_params(params: str, key: bytes) -> str:
 
 def generate_fingerprint_qr(route: str, params: str, qr_name: str, encryption_key: bytes):
     """Generate QR code with encrypted parameters."""
-    # base_url = "https://astar-livesearch.vercel.app"
-    base_url = "http://168.5.182.94:3000"
+    base_url = "https://astar-livesearch.vercel.app"
+    # base_url = "http://168.5.182.94:3000"
     encrypted_params = encrypt_params(params, encryption_key) if params else ""
     
     full_url = f"{base_url}{route}"
