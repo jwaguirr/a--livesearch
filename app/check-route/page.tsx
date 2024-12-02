@@ -111,7 +111,6 @@ export default function CheckRoute() {
         setIsLoading(false);
 
       } catch (error) {
-        console.error('Error:', error);
         router.push('/failure');
       }
     }
@@ -154,7 +153,6 @@ export default function CheckRoute() {
         router.push(`/failure?node=${routeData?.letter}`);
       }
     } catch (error) {
-      console.error('Error:', error);
       router.push(`/failure?node=${routeData?.letter}`);
     }
   };

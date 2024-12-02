@@ -25,9 +25,12 @@ export async function POST(request: Request) {
       (route: string) => !user.goodProgress.includes(route)
     );
 
+
+    // 7 total routes 
+    const gCostDict = {0: 0, 1:50, 2:100, 3:120, 4:100, 5:150, 6 : 200}
     // Formula is 6 total routes - amount remaining times 50
-    const correctGCost = (5 - remainingRoutes.length) * 50
-    console.error("Remaining routes!", remainingRoutes)
+    const correctGCost = gCostDict[(7 - remainingRoutes.length)]
+    console.log("Remaining routes!", remainingRoutes.length)
     // Record the attempt with g-cost
     const progressEntry = {
       node: letter,
@@ -58,7 +61,7 @@ export async function POST(request: Request) {
 
     console.log(user)
 
-    if (user.goodProgress.length + 1 === 5) {
+    if (user.goodProgress.length + 1 === 7) {
       console.log("YES CHANGE SCREENS")
       await client.close()
       return NextResponse.json({

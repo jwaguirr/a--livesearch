@@ -71,7 +71,7 @@ const TeamRegistrationForm = () => {
         fullName: formData.user.name,
         groupMembers: allTeamMembers,
         fingerPrint: fingerprint,
-        idealRoute: ["A", "B", "C", "D", "E"],
+        idealRoute: ["A", "B", "F", "G", "C", "D", "E"],
         progress: [{ "initial": new Date().toISOString() }],
         goodProgress: []
       };
